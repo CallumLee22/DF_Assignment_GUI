@@ -22,16 +22,12 @@ def index():
 @app.route("/users")
 def users():
     all_users = supabase.table("Users").select("*").execute().data
-    first_names = []
-    last_names = []
+    full_names = []
     
     for names in all_users:
-       first_names.append(names["first_name"])
-       
-    for names in all_users:
-        last_names.append(names["last_name"])
-    
-    return render_template("users.jinja", first_names=first_names, last_names=last_names)
+       full_names.append(names["first_name"] + " " + names["last_name"])
+
+    return render_template("users.jinja", full_names=full_names)
 
 @app.route("/groups")
 def groups():
