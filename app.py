@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
 from flask import Flask, render_template
+import numpy
 
 load_dotenv()
 
@@ -20,15 +21,37 @@ def index():
 
 @app.route("/users")
 def users():
-    return render_template("users.jinja")
+    all_users = supabase.table("Users").select("*").execute().data
+    first_names = []
+    last_names = []
+    
+    for names in all_users:
+       first_names.append(names["first_name"])
+       
+    for names in all_users:
+        last_names.append(names["last_name"])
+    
+    return render_template("users.jinja", first_names=first_names, last_names=last_names)
 
 @app.route("/groups")
 def groups():
-    return render_template("groups.jinja")
+    all_groups = supabase.table("Groups").select("*").execute().data
+    names = []
+    
+    for name in all_groups:
+       names.append(name["name"])
+    
+    return render_template("groups.jinja", names=names)
 
 @app.route("/departments")
 def departments():
-    return render_template("departments.jinja")
+    all_users = supabase.table("Departments").select("*").execute().data
+    names = []
+    
+    for name in all_users:
+       names.append(name["name"])
+    
+    return render_template("departments.jinja", names=names)
 
 if __name__ == "__main__":
     app.run()
