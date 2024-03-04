@@ -38,13 +38,20 @@ def users():
             }
         )
 
-    x = ["CPU", "GPU", "RAM"]
-    y = [12, 16, 6]
+    fig, ax = plt.subplots()
 
-    plt.bar(x, y, align="center")
-    plt.title("Bar graph")
-    plt.ylabel("Component")
-    plt.xlabel("Being Used")
+    components = ['CPUs', 'GPUs', 'RAM', 'Machines']
+    counts = [40, 100, 30, 55]
+    bar_labels = ['red', 'blue', '_red', 'orange']
+    bar_colors = ['tab:red', 'tab:blue', 'tab:red', 'tab:orange']
+
+    ax.bar(components, counts, label=bar_labels, color=bar_colors)
+
+    ax.set_xlabel('Component')
+    ax.set_ylabel('Number Being Used')
+    ax.set_title('Component Usage')
+
+    plt.savefig("static/name.png")
 
     return render_template("users.jinja", user_names=user_names)
 
