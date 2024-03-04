@@ -2,4 +2,3 @@ supabase
 Flask
 setuptools
 python-dotenv
-numpy
