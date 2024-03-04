@@ -28,44 +28,63 @@ def users():
         .execute()
         .data
     )
-    user_names = []
+    all_machines = supabase.table("Machines").select("user_id", "specification_id").execute().data
+
+    user_info = []
 
     for name in all_users:
-        user_names.append(
+        user_info.append(
             {
                 "user_id": name["user_id"],
                 "full_name": name["first_name"] + " " + name["last_name"],
+                "machines": []
             }
         )
+    
+    for user in user_info:
+        for machine in all_machines:
+            if machine["user_id"] == user["user_id"]:
+                user["machines"].append(machine["specification_id"])
 
-    fig, ax = plt.subplots()
+    for user in user_info:
+        if len(user["machines"]) != 0:
+            cpus = 0
+            gpus = 0
+            ram_gb = 0
+            for machine in user["machines"]:
+                spec = supabase.table("Specifications").select("cpus", "gpus", "ram_gb").eq("specification_id", machine).execute().data[0]
 
-    components = ['CPUs', 'GPUs', 'RAM', 'Machines']
-    counts = [40, 100, 30, 55]
-    bar_labels = ['red', 'blue', '_red', 'orange']
-    bar_colors = ['tab:red', 'tab:blue', 'tab:red', 'tab:orange']
+                cpus += int(spec["cpus"])
+                gpus += int(spec["gpus"])
+                ram_gb += int(spec["ram_gb"])
 
-    ax.bar(components, counts, label=bar_labels, color=bar_colors)
+            fig, ax = plt.subplots()
 
-    ax.set_xlabel('Component')
-    ax.set_ylabel('Number Being Used')
-    ax.set_title('Component Usage')
+            components = ['CPUs', 'GPUs', 'RAM']
+            counts = [cpus, gpus, ram_gb]
+            bar_colors = ['tab:red', 'tab:blue', 'tab:green']
 
-    plt.savefig("static/name.png")
+            ax.bar(components, counts, color=bar_colors)
 
-    return render_template("users.jinja", user_names=user_names)
+            ax.set_xlabel('Component')
+            ax.set_ylabel('Number Being Used')
+            ax.set_title('Component Usage')
+
+            plt.savefig(f"static/{user['full_name']}.png")
+
+    return render_template("users.jinja", user_info=user_info)
 
 
 @app.route("/groups")
 def groups():
-    groups = supabase.table("Groups").select("*").execute().data
+    groups = supabase.table("Groups").select("group_id", "name").execute().data
 
     return render_template("groups.jinja", groups=groups)
 
 
 @app.route("/departments")
 def departments():
-    departments = supabase.table("Departments").select("*").execute().data
+    departments = supabase.table("Departments").select("department_id", "name").execute().data
 
     return render_template("departments.jinja", departments=departments)
 

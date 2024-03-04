@@ -2,13 +2,13 @@
 
 {% block content %}
 
-{% for name in user_names %}
+{% for name in user_info %}
     <div class="card">
         <div class="card-header">
             {{ name["full_name"] }}
         </div>
         <div class="card-body">
-            <img src='static/name.png' width="45%" height="auto" style="display:inline-block;">
+            <img src='static/{{name["full_name"]}}.png' width="45%" height="auto" style="display:inline-block;">
         </div>
     </div>
     <br>
