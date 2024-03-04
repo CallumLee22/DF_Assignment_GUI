@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from supabase import create_client
 from flask import Flask, render_template
+from matplotlib import pyplot as plt
 
 load_dotenv()
 
@@ -13,7 +14,6 @@ supabase = create_client(url, key)
 app = Flask(__name__)
 app.app_context().push()
 app.config["SECRET_KEY"] = "secret_key"
-
 
 @app.route("/")
 def index():
@@ -37,6 +37,14 @@ def users():
                 "full_name": name["first_name"] + " " + name["last_name"],
             }
         )
+
+    x = ["CPU", "GPU", "RAM"]
+    y = [12, 16, 6]
+
+    plt.bar(x, y, align="center")
+    plt.title("Bar graph")
+    plt.ylabel("Component")
+    plt.xlabel("Being Used")
 
     return render_template("users.jinja", user_names=user_names)
 
