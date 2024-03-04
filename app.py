@@ -43,24 +43,16 @@ def users():
 
 @app.route("/groups")
 def groups():
-    all_groups = supabase.table("Groups").select("*").execute().data
-    names = []
+    groups = supabase.table("Groups").select("*").execute().data
 
-    for name in all_groups:
-        names.append(name["name"])
-
-    return render_template("groups.jinja", names=names)
+    return render_template("groups.jinja", groups=groups)
 
 
 @app.route("/departments")
 def departments():
-    all_users = supabase.table("Departments").select("*").execute().data
-    names = []
+    departments = supabase.table("Departments").select("*").execute().data
 
-    for name in all_users:
-        names.append(name["name"])
-
-    return render_template("departments.jinja", names=names)
+    return render_template("departments.jinja", departments=departments)
 
 
 if __name__ == "__main__":
