@@ -86,6 +86,59 @@ def groups():
 def departments():
     departments = supabase.table("Departments").select("department_id", "name").execute().data
 
+    fig, ax = plt.subplots()
+
+    dep = []
+
+    for department in departments:
+        dep.append(department["name"])
+
+    counts = []
+
+    if len(counts) == 0:
+        for name in dep:
+            counts.append(0)
+
+    ax.bar(dep, counts)
+
+    ax.set_xlabel('Department')
+    ax.set_ylabel('CPUs Being Used')
+    ax.set_title('CPU Usage')
+
+    plt.savefig("static/departments_cpu.png")
+
+    fig, ax = plt.subplots()
+
+    counts = []
+
+    if len(counts) == 0:
+        for name in dep:
+            counts.append(0)
+
+    ax.bar(dep, counts)
+
+    ax.set_xlabel('Department')
+    ax.set_ylabel('GPUs Being Used')
+    ax.set_title('GPU Usage')
+
+    plt.savefig("static/departments_gpu.png")
+
+    fig, ax = plt.subplots()
+
+    counts = []
+
+    if len(counts) == 0:
+        for name in dep:
+            counts.append(0)
+
+    ax.bar(dep, counts)
+
+    ax.set_xlabel('Department')
+    ax.set_ylabel('RAM (Gb) Being Used')
+    ax.set_title('RAM Usage')
+
+    plt.savefig("static/departments_ram.png")
+
     return render_template("departments.jinja", departments=departments)
 
 

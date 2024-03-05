@@ -2,16 +2,34 @@
 
 {% block content %}
 
-{% for name in departments %}
     <div class="card">
         <div class="card-header">
-            {{ name["name"] }}
+            CPUs
         </div>
         <div class="card-body">
-        
+            <img src="static/departments_cpu.png">
         </div>
     </div>
     <br>
-{% endfor %}
+
+        <div class="card">
+        <div class="card-header">
+            GPUs
+        </div>
+        <div class="card-body">
+            <img src="static/departments_gpu.png">
+        </div>
+    </div>
+    <br>
+
+        <div class="card">
+        <div class="card-header">
+            RAM
+        </div>
+        <div class="card-body">
+            <img src="static/departments_ram.png">
+        </div>
+    </div>
+    <br>
 
 {% endblock %}
