@@ -5,10 +5,12 @@
 {% for name in user_info %}
     <div class="card">
         <div class="card-header">
-            {{ name["full_name"] }}
+            <h4><strong>{{ name["full_name"] }}</strong></h4>
         </div>
         <div class="card-body">
-            <img src='static/{{name["full_name"]}}.png' width="45%" height="auto" style="display:inline-block;">
+            <center>
+                <img src='static/{{name["full_name"]}}.png'>
+            </center>
         </div>
     </div>
     <br>
