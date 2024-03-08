@@ -64,7 +64,7 @@ def users():
             counts = [cpus, gpus, ram_gb]
             bar_colors = ['tab:red', 'tab:blue', 'tab:green']
 
-            ax.bar(components, counts, color=bar_colors)
+            ax.barh(components, counts, color=bar_colors)
 
             ax.set_xlabel('Component')
             ax.set_ylabel('Number Being Used')
@@ -77,69 +77,63 @@ def users():
 
 @app.route("/groups")
 def groups():
-    groups = supabase.table("Groups").select("group_id", "name").execute().data
+    all_machines = supabase.table("Machines").select("user_id", "specification_id").execute().data
+    all_users = supabase.table("Users").select("user_id", "group_id").execute().data
+    all_groups = supabase.table("Groups").select("group_id", "name").execute().data
+    all_specifications = supabase.table("Specifications").select("*").execute().data
+    
+    group_names = []
 
-    return render_template("groups.jinja", groups=groups)
+    for group in all_groups:
+        group_names.append(group["name"])
+
+    group_info = []
+
+    for group in all_groups:
+        users = []
+        for user in all_users:
+            if user["group_id"] == group["group_id"]:
+                users.append(user["user_id"])
+        group_info.append({"group_id": group["group_id"], "name": group["name"],"users": users, "machines": []})
+
+    for group in group_info:
+        machines = []
+        for machine in all_machines:
+            if machine["user_id"] in group["users"]:
+                group["machines"].append(machine["specification_id"])
+
+    for group in group_info:
+        cpus = 0
+        gpus = 0
+        ram_gb = 0
+        for machine in group["machines"]:
+            spec = supabase.table("Specifications").select("cpus", "gpus", "ram_gb").eq("specification_id", machine).execute().data[0]
+
+            cpus += int(spec["cpus"])
+            gpus += int(spec["gpus"])
+            ram_gb += int(spec["ram_gb"])
+
+        fig, ax = plt.subplots()
+
+        components = ['CPUs', 'GPUs', 'RAM']
+        counts = [cpus, gpus, ram_gb]
+        bar_colors = ['tab:red', 'tab:blue', 'tab:green']
+
+        ax.barh(components, counts, color=bar_colors)
+
+        ax.set_xlabel('Component')
+        ax.set_ylabel('Number Being Used')
+        ax.set_title('Component Usage')
+
+        plt.savefig(f"static/{group['name']}.png")
+
+    return render_template("groups.jinja", groups=all_groups)
 
 
 @app.route("/departments")
 def departments():
-    departments = supabase.table("Departments").select("department_id", "name").execute().data
 
-    fig, ax = plt.subplots()
-
-    dep = []
-
-    for department in departments:
-        dep.append(department["name"])
-
-    counts = []
-
-    if len(counts) == 0:
-        for name in dep:
-            counts.append(0)
-
-    ax.bar(dep, counts)
-
-    ax.set_xlabel('Department')
-    ax.set_ylabel('CPUs Being Used')
-    ax.set_title('CPU Usage')
-
-    plt.savefig("static/departments_cpu.png")
-
-    fig, ax = plt.subplots()
-
-    counts = []
-
-    if len(counts) == 0:
-        for name in dep:
-            counts.append(0)
-
-    ax.bar(dep, counts)
-
-    ax.set_xlabel('Department')
-    ax.set_ylabel('GPUs Being Used')
-    ax.set_title('GPU Usage')
-
-    plt.savefig("static/departments_gpu.png")
-
-    fig, ax = plt.subplots()
-
-    counts = []
-
-    if len(counts) == 0:
-        for name in dep:
-            counts.append(0)
-
-    ax.bar(dep, counts)
-
-    ax.set_xlabel('Department')
-    ax.set_ylabel('RAM (Gb) Being Used')
-    ax.set_title('RAM Usage')
-
-    plt.savefig("static/departments_ram.png")
-
-    return render_template("departments.jinja", departments=departments)
+    return render_template("departments.jinja", departments=all_departments)
 
 
 if __name__ == "__main__":
