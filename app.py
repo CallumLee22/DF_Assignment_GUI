@@ -132,6 +132,105 @@ def groups():
 
 @app.route("/departments")
 def departments():
+    all_departments = supabase.table("Departments").select("department_id", "name").execute().data
+    all_machines = supabase.table("Machines").select("user_id", "specification_id").execute().data
+    all_users = supabase.table("Users").select("user_id", "group_id").execute().data
+    all_groups = supabase.table("Groups").select("group_id").execute().data
+    all_specifications = supabase.table("Specifications").select("*").execute().data
+    
+    dep_names = []
+    dep_info = []
+    dep_groups = []
+
+    for department in all_departments:
+        dep_names.append(department["name"])
+
+    for department in all_departments:
+        groups_in_dep = supabase.table("Groups").select("group_id").eq("department_id", department["department_id"]).execute().data
+        groups = []
+        for departments in groups_in_dep:
+            groups.append(departments["group_id"])
+        dep_groups.append({"dep_name": department["name"], "groups": groups})
+    
+    users_in_group = []
+
+    for group in all_groups:
+        users = []
+        for user in all_users:
+            if user["group_id"] == group["group_id"]:
+                users.append(user["user_id"])
+        users_in_group.append({"group_id": group["group_id"], "users": users})
+
+    specs_in_group = []
+    for group in users_in_group:
+        specs = []
+        for machine in all_machines:
+            if machine["user_id"] in group["users"]:
+                specs.append({"specification_id": machine["specification_id"]})
+        specs_in_group.append({"group_id": group["group_id"], "specifications": specs})
+
+    group_total_usage = []
+    for group in specs_in_group:
+        ram = 0
+        cpus = 0
+        gpus = 0
+        for specs in group["specifications"]:
+            for spec in all_specifications:
+                if spec["specification_id"] == specs:
+                    ram += spec["ram_gb"]
+                    cpus += spec["cpus"]
+                    gpus += spec["gpus"]
+        group_total_usage.append({"group_id": group["group_id"], "ram": ram, "cpus": cpus, "gpus": gpus})
+
+    fig, ax = plt.subplots()
+
+    counts = []
+
+    if len(counts) == 0:
+        for name in dep_names:
+            counts.append(0)
+
+    ax.barh(dep_names, counts)
+
+    ax.invert_yaxis()
+
+    ax.set_xlabel('Department')
+    ax.set_ylabel('CPUs Being Used')
+    ax.set_title('CPU Usage')
+
+    plt.savefig("static/departments_cpu.png", bbox_inches='tight')
+
+    fig, ax = plt.subplots()
+
+    counts = []
+
+    if len(counts) == 0:
+        for name in dep_names:
+            counts.append(0)
+
+    ax.barh(dep_names, counts)
+
+    ax.set_xlabel('Department')
+    ax.set_ylabel('GPUs Being Used')
+    ax.set_title('GPU Usage')
+
+    plt.savefig("static/departments_gpu.png", bbox_inches='tight')
+
+    fig, ax = plt.subplots()
+
+    counts = []
+
+    if len(counts) == 0:
+        for name in dep_names:
+            counts.append(0)
+
+    ax.barh(dep_names, counts)
+
+    ax.set_xlabel('Department')
+    ax.set_ylabel('RAM (Gb) Being Used')
+    ax.set_title('RAM Usage')
+
+    plt.savefig("static/departments_ram.png", bbox_inches='tight')
 
     return render_template("departments.jinja", departments=all_departments)
 
