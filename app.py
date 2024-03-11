@@ -182,6 +182,14 @@ def departments():
                     gpus += spec["gpus"]
         group_total_usage.append({"group_id": group["group_id"], "ram": ram, "cpus": cpus, "gpus": gpus})
 
+    groups_in_dep = []
+    for dep in all_departments:
+        groups = []
+        for group in all_groups:
+            if group["departmet_id"] == dep["department_id"]:
+                groups.append(group["group_id"])
+        groups_in_dep.append({"department_id": dep["department_id"], "groups": groups})
+
     fig, ax = plt.subplots()
 
     counts = []
