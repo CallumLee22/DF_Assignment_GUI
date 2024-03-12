@@ -135,7 +135,7 @@ def departments():
     all_departments = supabase.table("Departments").select("department_id", "name").execute().data
     all_machines = supabase.table("Machines").select("user_id", "specification_id").execute().data
     all_users = supabase.table("Users").select("user_id", "group_id").execute().data
-    all_groups = supabase.table("Groups").select("group_id").execute().data
+    all_groups = supabase.table("Groups").select("group_id", "department_id").execute().data
     all_specifications = supabase.table("Specifications").select("*").execute().data
     
     dep_names = []
@@ -153,7 +153,6 @@ def departments():
         dep_groups.append({"dep_name": department["name"], "groups": groups})
     
     users_in_group = []
-
     for group in all_groups:
         users = []
         for user in all_users:
@@ -166,8 +165,9 @@ def departments():
         specs = []
         for machine in all_machines:
             if machine["user_id"] in group["users"]:
-                specs.append({"specification_id": machine["specification_id"]})
+                specs.append(machine["specification_id"])
         specs_in_group.append({"group_id": group["group_id"], "specifications": specs})
+    print(specs_in_group)
 
     group_total_usage = []
     for group in specs_in_group:
@@ -186,13 +186,26 @@ def departments():
     for dep in all_departments:
         groups = []
         for group in all_groups:
-            if group["departmet_id"] == dep["department_id"]:
+            if group["department_id"] == dep["department_id"]:
                 groups.append(group["group_id"])
         groups_in_dep.append({"department_id": dep["department_id"], "groups": groups})
+
+    dep_total_usage = []
+    for dep in groups_in_dep:
+        dep_total_usage.append({"department_id": dep["department_id"], "ram": 0, "cpus": 0, "gpus": 0})
+        for group in group_total_usage:
+            if group["group_id"] in dep["groups"]:
+                dep_total_usage[dep["department_id"] - 1]["ram"] += group["ram"]
+                dep_total_usage[dep["department_id"] - 1]["cpus"] += group["cpus"]
+                dep_total_usage[dep["department_id"] - 1]["gpus"] += group["gpus"]
+    
+    print(dep_total_usage)
 
     fig, ax = plt.subplots()
 
     counts = []
+    for dep in dep_total_usage:
+        counts.append(dep["cpus"])
 
     if len(counts) == 0:
         for name in dep_names:
@@ -211,6 +224,8 @@ def departments():
     fig, ax = plt.subplots()
 
     counts = []
+    for dep in dep_total_usage:
+        counts.append(dep["gpus"])
 
     if len(counts) == 0:
         for name in dep_names:
@@ -227,6 +242,8 @@ def departments():
     fig, ax = plt.subplots()
 
     counts = []
+    for dep in dep_total_usage:
+        counts.append(dep["ram"])
 
     if len(counts) == 0:
         for name in dep_names:
