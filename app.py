@@ -139,7 +139,6 @@ def departments():
     all_specifications = supabase.table("Specifications").select("*").execute().data
     
     dep_names = []
-    dep_info = []
     dep_groups = []
 
     for department in all_departments:
@@ -167,7 +166,6 @@ def departments():
             if machine["user_id"] in group["users"]:
                 specs.append(machine["specification_id"])
         specs_in_group.append({"group_id": group["group_id"], "specifications": specs})
-    print(specs_in_group)
 
     group_total_usage = []
     for group in specs_in_group:
@@ -198,8 +196,6 @@ def departments():
                 dep_total_usage[dep["department_id"] - 1]["ram"] += group["ram"]
                 dep_total_usage[dep["department_id"] - 1]["cpus"] += group["cpus"]
                 dep_total_usage[dep["department_id"] - 1]["gpus"] += group["gpus"]
-    
-    print(dep_total_usage)
 
     fig, ax = plt.subplots()
 
