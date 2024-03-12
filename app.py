@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from supabase import create_client
 from flask import Flask, render_template
 from matplotlib import pyplot as plt
+from cachetools import cached, TTLCache
 
 load_dotenv()
 
@@ -20,6 +21,7 @@ def index():
     return render_template("index.jinja")
 
 
+@cached(cache=TTLCache(maxsize=1, ttl=30))
 @app.route("/users")
 def users():
     all_users = (
@@ -75,6 +77,7 @@ def users():
     return render_template("users.jinja", user_info=user_info)
 
 
+@cached(cache=TTLCache(maxsize=1, ttl=30))
 @app.route("/groups")
 def groups():
     all_machines = supabase.table("Machines").select("user_id", "specification_id").execute().data
@@ -130,6 +133,7 @@ def groups():
     return render_template("groups.jinja", groups=all_groups)
 
 
+@cached(cache=TTLCache(maxsize=1, ttl=30))
 @app.route("/departments")
 def departments():
     all_departments = supabase.table("Departments").select("department_id", "name").execute().data
