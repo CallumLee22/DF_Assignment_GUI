@@ -1,15 +1,6 @@
 {% extends "base.jinja"%}
 
 {% block content %}
-    
-    {% for message in get_flashed_messages() %}
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    {% endfor %}
 
     <h1>Welcome</h1>
 
