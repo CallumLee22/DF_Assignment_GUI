@@ -21,8 +21,8 @@ def index():
     return render_template("index.jinja")
 
 
-@cached(cache=TTLCache(maxsize=1, ttl=30))
 @app.route("/users")
+@cached(cache=TTLCache(maxsize=1, ttl=30))
 def users():
     all_users = (
         supabase.table("Users")
@@ -77,8 +77,8 @@ def users():
     return render_template("users.jinja", user_info=user_info)
 
 
-@cached(cache=TTLCache(maxsize=1, ttl=30))
 @app.route("/groups")
+@cached(cache=TTLCache(maxsize=1, ttl=30))
 def groups():
     all_machines = supabase.table("Machines").select("user_id", "specification_id").execute().data
     all_users = supabase.table("Users").select("user_id", "group_id").execute().data
@@ -133,8 +133,8 @@ def groups():
     return render_template("groups.jinja", groups=all_groups)
 
 
-@cached(cache=TTLCache(maxsize=1, ttl=30))
 @app.route("/departments")
+@cached(cache=TTLCache(maxsize=1, ttl=30))
 def departments():
     all_departments = supabase.table("Departments").select("department_id", "name").execute().data
     all_machines = supabase.table("Machines").select("user_id", "specification_id").execute().data
