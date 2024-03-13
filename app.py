@@ -49,30 +49,29 @@ def users():
                 user["machines"].append(machine["specification_id"])
 
     for user in user_info:
-        if len(user["machines"]) != 0:
-            cpus = 0
-            gpus = 0
-            ram_gb = 0
-            for machine in user["machines"]:
-                spec = supabase.table("Specifications").select("cpus", "gpus", "ram_gb").eq("specification_id", machine).execute().data[0]
+        cpus = 0
+        gpus = 0
+        ram_gb = 0
+        for machine in user["machines"]:
+            spec = supabase.table("Specifications").select("cpus", "gpus", "ram_gb").eq("specification_id", machine).execute().data[0]
 
-                cpus += int(spec["cpus"])
-                gpus += int(spec["gpus"])
-                ram_gb += int(spec["ram_gb"])
+            cpus += int(spec["cpus"])
+            gpus += int(spec["gpus"])
+            ram_gb += int(spec["ram_gb"])
 
-            fig, ax = plt.subplots()
+        fig, ax = plt.subplots()
 
-            components = ['CPUs', 'GPUs', 'RAM']
-            counts = [cpus, gpus, ram_gb]
-            bar_colors = ['tab:red', 'tab:blue', 'tab:green']
+        components = ['CPUs', 'GPUs', 'RAM']
+        counts = [cpus, gpus, ram_gb]
+        bar_colors = ['tab:red', 'tab:blue', 'tab:green']
 
-            ax.barh(components, counts, color=bar_colors)
+        ax.barh(components, counts, color=bar_colors)
 
-            ax.set_xlabel('Component')
-            ax.set_ylabel('Number Being Used')
-            ax.set_title('Component Usage')
+        ax.set_xlabel('Component')
+        ax.set_ylabel('Number Being Used')
+        ax.set_title('Component Usage')
 
-            plt.savefig(f"static/{user['full_name']}.png")
+        plt.savefig(f"static/{user['full_name']}.png")
 
     return render_template("users.jinja", user_info=user_info)
 
