@@ -83,7 +83,6 @@ def groups():
     all_machines = supabase.table("Machines").select("user_id", "specification_id").execute().data
     all_users = supabase.table("Users").select("user_id", "group_id").execute().data
     all_groups = supabase.table("Groups").select("group_id", "name").execute().data
-    all_specifications = supabase.table("Specifications").select("*").execute().data
     
     group_names = []
 
@@ -100,7 +99,6 @@ def groups():
         group_info.append({"group_id": group["group_id"], "name": group["name"],"users": users, "machines": []})
 
     for group in group_info:
-        machines = []
         for machine in all_machines:
             if machine["user_id"] in group["users"]:
                 group["machines"].append(machine["specification_id"])
