@@ -30,7 +30,9 @@ def users():
         .execute()
         .data
     )
-    all_machines = supabase.table("Machines").select("user_id", "specification_id").execute().data
+    all_machines = supabase.table("Machines").select("user_id", "specification_id", "state").neq("state", "DELETED").execute().data
+
+    print(all_machines)
 
     user_info = []
 
@@ -79,7 +81,7 @@ def users():
 @app.route("/groups")
 @cached(cache=TTLCache(maxsize=1, ttl=30))
 def groups():
-    all_machines = supabase.table("Machines").select("user_id", "specification_id").execute().data
+    all_machines = supabase.table("Machines").select("user_id", "specification_id").neq("state", "DELETED").execute().data
     all_users = supabase.table("Users").select("user_id", "group_id").execute().data
     all_groups = supabase.table("Groups").select("group_id", "name").execute().data
     
@@ -134,7 +136,7 @@ def groups():
 @cached(cache=TTLCache(maxsize=1, ttl=30))
 def departments():
     all_departments = supabase.table("Departments").select("department_id", "name").execute().data
-    all_machines = supabase.table("Machines").select("user_id", "specification_id").execute().data
+    all_machines = supabase.table("Machines").select("user_id", "specification_id").neq("state", "DELETED").execute().data
     all_users = supabase.table("Users").select("user_id", "group_id").execute().data
     all_groups = supabase.table("Groups").select("group_id", "department_id").execute().data
     all_specifications = supabase.table("Specifications").select("*").execute().data
