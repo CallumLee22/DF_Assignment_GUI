@@ -30,25 +30,21 @@ def users():
         .execute()
         .data
     )
-    all_machines = supabase.table("Machines").select("user_id", "specification_id", "state").neq("state", "DELETED").execute().data
-
-    print(all_machines)
 
     user_info = []
 
     for name in all_users:
+        all_machines = supabase.table("Machines").select("user_id", "specification_id", "state").eq("user_id", name["user_id"]).neq("state", "DELETED").execute().data
         user_info.append(
             {
                 "user_id": name["user_id"],
                 "full_name": name["first_name"] + " " + name["last_name"],
-                "machines": []
+                "machines": [
+                    spec_id["specification_id"]
+                    for spec_id in all_machines
+                    ]
             }
         )
-    
-    for user in user_info:
-        for machine in all_machines:
-            if machine["user_id"] == user["user_id"]:
-                user["machines"].append(machine["specification_id"])
 
     for user in user_info:
         cpus = 0
