@@ -40,8 +40,8 @@ def users():
                 "user_id": name["user_id"],
                 "full_name": name["first_name"] + " " + name["last_name"],
                 "machines": [
-                    spec_id["specification_id"]
-                    for spec_id in all_machines
+                    machine["specification_id"]
+                    for machine in all_machines
                     ]
             }
         )
