@@ -126,70 +126,43 @@ def groups():
 @app.route("/departments")
 @cached(cache=TTLCache(maxsize=1, ttl=30))
 def departments():
-    all_departments = supabase.table("Departments").select("department_id", "name").execute().data
+    all_departments = {dep["department_id"]: dep["name"] for dep in supabase.table("Departments").select("department_id", "name").execute().data}
     all_machines = supabase.table("Machines").select("user_id", "specification_id").neq("state", "DELETED").execute().data
     all_users = supabase.table("Users").select("user_id", "group_id").execute().data
-    all_groups = supabase.table("Groups").select("group_id", "department_id").execute().data
-    all_specifications = supabase.table("Specifications").select("*").execute().data
-    
-    dep_names = []
-    dep_groups = []
+    all_groups = {group["group_id"]: group["department_id"] for group in supabase.table("Groups").select("group_id", "department_id").execute().data}
+    all_specifications = {spec["specification_id"]: spec for spec in supabase.table("Specifications").select("*").execute().data}
 
-    for department in all_departments:
-        dep_names.append(department["name"])
+    dep_names = [all_departments[name] for name in all_departments.keys()]
 
-    for department in all_departments:
-        groups_in_dep = supabase.table("Groups").select("group_id").eq("department_id", department["department_id"]).execute().data
-        groups = []
-        for departments in groups_in_dep:
-            groups.append(departments["group_id"])
-        dep_groups.append({"dep_name": department["name"], "groups": groups})
-    
-    users_in_group = []
-    for group in all_groups:
-        users = []
-        for user in all_users:
-            if user["group_id"] == group["group_id"]:
-                users.append(user["user_id"])
-        users_in_group.append({"group_id": group["group_id"], "users": users})
+    users_in_group = {}
+    for user in all_users:
+        users_in_group.setdefault(user["group_id"], []).append(user["user_id"])
 
-    specs_in_group = []
-    for group in users_in_group:
-        specs = []
-        for machine in all_machines:
-            if machine["user_id"] in group["users"]:
-                specs.append(machine["specification_id"])
-        specs_in_group.append({"group_id": group["group_id"], "specifications": specs})
+    machines_by_user = {}
+    for machine in all_machines:
+        machines_by_user.setdefault(machine["user_id"], []).append(machine["specification_id"])
+        
+    group_total_usage = {}
+    for group_id, users in users_in_group.items():
+        group_total_usage[group_id] = {"ram": 0, "cpus": 0, "gpus": 0}
+        for user_id in users:
+            for spec_id in machines_by_user.get(user_id, []):
+                spec = all_specifications.get(spec_id)
+                if spec:
+                    group_total_usage[group_id]["ram"] += spec["ram_gb"]
+                    group_total_usage[group_id]["cpus"] += spec["cpus"]
+                    group_total_usage[group_id]["gpus"] += spec["gpus"]
 
-    group_total_usage = []
-    for group in specs_in_group:
-        ram = 0
-        cpus = 0
-        gpus = 0
-        for specs in group["specifications"]:
-            for spec in all_specifications:
-                if spec["specification_id"] == specs:
-                    ram += spec["ram_gb"]
-                    cpus += spec["cpus"]
-                    gpus += spec["gpus"]
-        group_total_usage.append({"group_id": group["group_id"], "ram": ram, "cpus": cpus, "gpus": gpus})
+    dep_total_usage = {}
+    for group_id, dep_id in all_groups.items():
+        dep_total_usage.setdefault(dep_id, {"ram": 0, "cpus": 0, "gpus": 0})
+        group_usage = group_total_usage.get(group_id)
+        if group_usage:
+            dep_total_usage[dep_id]["ram"] += group_usage["ram"]
+            dep_total_usage[dep_id]["cpus"] += group_usage["cpus"]
+            dep_total_usage[dep_id]["gpus"] += group_usage["gpus"]
 
-    groups_in_dep = []
-    for dep in all_departments:
-        groups = []
-        for group in all_groups:
-            if group["department_id"] == dep["department_id"]:
-                groups.append(group["group_id"])
-        groups_in_dep.append({"department_id": dep["department_id"], "groups": groups})
-
-    dep_total_usage = []
-    for dep in groups_in_dep:
-        dep_total_usage.append({"department_id": dep["department_id"], "ram": 0, "cpus": 0, "gpus": 0})
-        for group in group_total_usage:
-            if group["group_id"] in dep["groups"]:
-                dep_total_usage[dep["department_id"] - 1]["ram"] += group["ram"]
-                dep_total_usage[dep["department_id"] - 1]["cpus"] += group["cpus"]
-                dep_total_usage[dep["department_id"] - 1]["gpus"] += group["gpus"]
+    dep_total_usage = [{"department_id": dep_id, **usage} for dep_id, usage in dep_total_usage.items()]
 
     fig, ax = plt.subplots()
 
@@ -205,8 +178,8 @@ def departments():
 
     ax.invert_yaxis()
 
-    ax.set_xlabel('Department')
-    ax.set_ylabel('CPUs Being Used')
+    ax.set_xlabel('CPUs Being Used')
+    ax.set_ylabel('Department')
     ax.set_title('CPU Usage')
 
     plt.savefig("static/departments_cpu.png", bbox_inches='tight')
@@ -223,8 +196,8 @@ def departments():
 
     ax.barh(dep_names, counts)
 
-    ax.set_xlabel('Department')
-    ax.set_ylabel('GPUs Being Used')
+    ax.set_xlabel('GPUs Being Used')
+    ax.set_ylabel('Department')
     ax.set_title('GPU Usage')
 
     plt.savefig("static/departments_gpu.png", bbox_inches='tight')
@@ -241,8 +214,8 @@ def departments():
 
     ax.barh(dep_names, counts)
 
-    ax.set_xlabel('Department')
-    ax.set_ylabel('RAM (Gb) Being Used')
+    ax.set_xlabel('RAM (Gb) Being Used')
+    ax.set_ylabel('Department')
     ax.set_title('RAM Usage')
 
     plt.savefig("static/departments_ram.png", bbox_inches='tight')
