@@ -167,57 +167,10 @@ def departments():
          .select("department_id", "name")
          .execute().data}
     )
-    all_machines = (
-        supabase.table("Machines").select("user_id", "specification_id")
-        .neq("state", "DELETED").execute().data
-    )
-    all_users = supabase.table("Users").select("user_id", "group_id").execute().data
-    all_groups = (
-        {group["group_id"]: group["department_id"]
-         for group in supabase.table("Groups")
-         .select("group_id", "department_id")
-         .execute().data}
-    )
-    all_specifications = (
-        {spec["specification_id"]: spec
-        for spec in supabase.table("Specifications")
-        .select("*").execute().data}
-    )
+
+    dep_total_usage = get_department_info()
 
     dep_names = [all_departments[name] for name in all_departments.keys()]
-
-    users_in_group = {}
-    for user in all_users:
-        users_in_group.setdefault(user["group_id"], []).append(user["user_id"])
-
-    machines_by_user = {}
-    for machine in all_machines:
-        machines_by_user.setdefault(machine["user_id"], []).append(machine["specification_id"])
-
-    group_total_usage = {}
-    for group_id, group_users in users_in_group.items():
-        group_total_usage[group_id] = {"ram": 0, "cpus": 0, "gpus": 0}
-        for user_id in group_users:
-            for spec_id in machines_by_user.get(user_id, []):
-                spec = all_specifications.get(spec_id)
-                if spec:
-                    group_total_usage[group_id]["ram"] += spec["ram_gb"]
-                    group_total_usage[group_id]["cpus"] += spec["cpus"]
-                    group_total_usage[group_id]["gpus"] += spec["gpus"]
-
-    dep_total_usage = {}
-    for group_id, dep_id in all_groups.items():
-        dep_total_usage.setdefault(dep_id, {"ram": 0, "cpus": 0, "gpus": 0})
-        group_usage = group_total_usage.get(group_id)
-        if group_usage:
-            dep_total_usage[dep_id]["ram"] += group_usage["ram"]
-            dep_total_usage[dep_id]["cpus"] += group_usage["cpus"]
-            dep_total_usage[dep_id]["gpus"] += group_usage["gpus"]
-
-    dep_total_usage = [
-        {"department_id": dep_id, **usage}
-        for dep_id, usage in dep_total_usage.items()
-    ]
 
     fig, ax = plt.subplots()
 
@@ -277,6 +230,60 @@ def departments():
 
     return render_template("departments.jinja", departments=all_departments)
 
+def get_department_info():
+    """
+    Get department information
+    """
+
+    all_machines = (
+        supabase.table("Machines").select("user_id", "specification_id")
+        .neq("state", "DELETED").execute().data
+    )
+    all_users = supabase.table("Users").select("user_id", "group_id").execute().data
+    all_groups = (
+        {group["group_id"]: group["department_id"]
+         for group in supabase.table("Groups")
+         .select("group_id", "department_id")
+         .execute().data}
+    )
+    all_specifications = (
+        {spec["specification_id"]: spec
+        for spec in supabase.table("Specifications")
+        .select("*").execute().data}
+    )
+
+    users_in_group = {}
+    for user in all_users:
+        users_in_group.setdefault(user["group_id"], []).append(user["user_id"])
+
+    machines_by_user = {}
+    for machine in all_machines:
+        machines_by_user.setdefault(machine["user_id"], []).append(machine["specification_id"])
+
+    group_total_usage = {}
+    for group_id, group_users in users_in_group.items():
+        group_total_usage[group_id] = {"ram": 0, "cpus": 0, "gpus": 0}
+        for user_id in group_users:
+            for spec_id in machines_by_user.get(user_id, []):
+                spec = all_specifications.get(spec_id)
+                if spec:
+                    group_total_usage[group_id]["ram"] += spec["ram_gb"]
+                    group_total_usage[group_id]["cpus"] += spec["cpus"]
+                    group_total_usage[group_id]["gpus"] += spec["gpus"]
+
+    dep_total_usage = {}
+    for group_id, dep_id in all_groups.items():
+        dep_total_usage.setdefault(dep_id, {"ram": 0, "cpus": 0, "gpus": 0})
+        group_usage = group_total_usage.get(group_id)
+        if group_usage:
+            dep_total_usage[dep_id]["ram"] += group_usage["ram"]
+            dep_total_usage[dep_id]["cpus"] += group_usage["cpus"]
+            dep_total_usage[dep_id]["gpus"] += group_usage["gpus"]
+
+    return [
+        {"department_id": dep_id, **usage}
+        for dep_id, usage in dep_total_usage.items()
+    ]
 
 if __name__ == "__main__":
     app.run()
