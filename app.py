@@ -78,17 +78,17 @@ def users():
             gpus += int(spec["gpus"])
             ram_gb += int(spec["ram_gb"])
 
-        fig, ax = plt.subplots()
+        fig, axes = plt.subplots()
 
         components = ['CPUs', 'GPUs', 'RAM']
         counts = [cpus, gpus, ram_gb]
         bar_colors = ['tab:red', 'tab:blue', 'tab:green']
 
-        ax.barh(components, counts, color=bar_colors)
+        axes.barh(components, counts, color=bar_colors)
 
-        ax.set_xlabel('Component')
-        ax.set_ylabel('Number Being Used')
-        ax.set_title('Component Usage')
+        axes.set_xlabel('Component')
+        axes.set_ylabel('Number Being Used')
+        axes.set_title('Component Usage')
 
         plt.savefig(f"static/{user['full_name']}.png")
 
@@ -108,19 +108,7 @@ def groups():
     all_users = supabase.table("Users").select("user_id", "group_id").execute().data
     all_groups = supabase.table("Groups").select("group_id", "name").execute().data
 
-    group_info = []
-
-    for group in all_groups:
-        groups_user = []
-        for user in all_users:
-            if user["group_id"] == group["group_id"]:
-                groups_user.append(user["user_id"])
-        group_info.append({"name": group["name"],"users": groups_user, "machines": []})
-
-    for group in group_info:
-        for machine in all_machines:
-            if machine["user_id"] in group["users"]:
-                group["machines"].append(machine["specification_id"])
+    group_info = get_group_info(all_groups, all_users, all_machines)
 
     for group in group_info:
         cpus = 0
@@ -260,6 +248,20 @@ def get_department_info():
     for machine in all_machines:
         machines_by_user.setdefault(machine["user_id"], []).append(machine["specification_id"])
 
+    dep_total_usage = get_dep_total_usage(
+        users_in_group, machines_by_user, all_specifications, all_groups
+    )
+
+    return [
+        {"department_id": dep_id, **usage}
+        for dep_id, usage in dep_total_usage.items()
+    ]
+
+def get_dep_total_usage(users_in_group, machines_by_user, all_specifications, all_groups):
+    """
+    Get departments' usage
+    """
+
     group_total_usage = {}
     for group_id, group_users in users_in_group.items():
         group_total_usage[group_id] = {"ram": 0, "cpus": 0, "gpus": 0}
@@ -280,10 +282,27 @@ def get_department_info():
             dep_total_usage[dep_id]["cpus"] += group_usage["cpus"]
             dep_total_usage[dep_id]["gpus"] += group_usage["gpus"]
 
-    return [
-        {"department_id": dep_id, **usage}
-        for dep_id, usage in dep_total_usage.items()
-    ]
+    return dep_total_usage
+
+def get_group_info(all_groups, all_users, all_machines):
+    """
+    Get all group info
+    """
+    group_info = []
+
+    for group in all_groups:
+        groups_user = []
+        for user in all_users:
+            if user["group_id"] == group["group_id"]:
+                groups_user.append(user["user_id"])
+        group_info.append({"name": group["name"],"users": groups_user, "machines": []})
+
+    for group in group_info:
+        for machine in all_machines:
+            if machine["user_id"] in group["users"]:
+                group["machines"].append(machine["specification_id"])
+
+    return group_info
 
 if __name__ == "__main__":
     app.run()
