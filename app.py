@@ -1,3 +1,7 @@
+"""
+Web app that shows usage of users, groups and departments
+"""
+
 import os
 from dotenv import load_dotenv
 from supabase import create_client
@@ -18,12 +22,18 @@ app.config["SECRET_KEY"] = "secret_key"
 
 @app.route("/")
 def index():
+    """
+    Index page for website
+    """
     return render_template("index.jinja")
 
 
 @app.route("/users")
 @cached(cache=TTLCache(maxsize=1, ttl=30))
 def users():
+    """
+    Gets all users' usage
+    """
     all_users = (
         supabase.table("Users")
         .select("user_id", "first_name", "last_name")
@@ -34,7 +44,13 @@ def users():
     user_info = []
 
     for name in all_users:
-        all_machines = supabase.table("Machines").select("user_id", "specification_id", "state").eq("user_id", name["user_id"]).neq("state", "DELETED").execute().data
+        all_machines = (
+            supabase.table("Machines")
+            .select("user_id", "specification_id", "state")
+            .eq("user_id", name["user_id"]).neq("state", "DELETED")
+            .execute().data
+        )
+
         user_info.append(
             {
                 "user_id": name["user_id"],
@@ -51,7 +67,12 @@ def users():
         gpus = 0
         ram_gb = 0
         for machine in user["machines"]:
-            spec = supabase.table("Specifications").select("cpus", "gpus", "ram_gb").eq("specification_id", machine).execute().data[0]
+            spec = (
+                supabase.table("Specifications")
+                .select("cpus", "gpus", "ram_gb")
+                .eq("specification_id", machine)
+                .execute().data[0]
+            )
 
             cpus += int(spec["cpus"])
             gpus += int(spec["gpus"])
@@ -77,7 +98,13 @@ def users():
 @app.route("/groups")
 @cached(cache=TTLCache(maxsize=1, ttl=30))
 def groups():
-    all_machines = supabase.table("Machines").select("user_id", "specification_id").neq("state", "DELETED").execute().data
+    """
+    Gets all usage regarding groups
+    """
+    all_machines = (
+        supabase.table("Machines").select("user_id", "specification_id")
+        .neq("state", "DELETED").execute().data
+    )
     all_users = supabase.table("Users").select("user_id", "group_id").execute().data
     all_groups = supabase.table("Groups").select("group_id", "name").execute().data
 
@@ -100,7 +127,12 @@ def groups():
         gpus = 0
         ram_gb = 0
         for machine in group["machines"]:
-            spec = supabase.table("Specifications").select("cpus", "gpus", "ram_gb").eq("specification_id", machine).execute().data[0]
+            spec = (
+                supabase.table("Specifications")
+                .select("cpus", "gpus", "ram_gb")
+                .eq("specification_id", machine)
+                .execute().data[0]
+            )
 
             cpus += int(spec["cpus"])
             gpus += int(spec["gpus"])
@@ -126,11 +158,31 @@ def groups():
 @app.route("/departments")
 @cached(cache=TTLCache(maxsize=1, ttl=30))
 def departments():
-    all_departments = {dep["department_id"]: dep["name"] for dep in supabase.table("Departments").select("department_id", "name").execute().data}
-    all_machines = supabase.table("Machines").select("user_id", "specification_id").neq("state", "DELETED").execute().data
+    """
+    Gets all usage regarding departments
+    """
+    all_departments = (
+        {dep["department_id"]: dep["name"]
+         for dep in supabase.table("Departments")
+         .select("department_id", "name")
+         .execute().data}
+    )
+    all_machines = (
+        supabase.table("Machines").select("user_id", "specification_id")
+        .neq("state", "DELETED").execute().data
+    )
     all_users = supabase.table("Users").select("user_id", "group_id").execute().data
-    all_groups = {group["group_id"]: group["department_id"] for group in supabase.table("Groups").select("group_id", "department_id").execute().data}
-    all_specifications = {spec["specification_id"]: spec for spec in supabase.table("Specifications").select("*").execute().data}
+    all_groups = (
+        {group["group_id"]: group["department_id"]
+         for group in supabase.table("Groups")
+         .select("group_id", "department_id")
+         .execute().data}
+    )
+    all_specifications = (
+        {spec["specification_id"]: spec
+        for spec in supabase.table("Specifications")
+        .select("*").execute().data}
+    )
 
     dep_names = [all_departments[name] for name in all_departments.keys()]
 
@@ -141,11 +193,11 @@ def departments():
     machines_by_user = {}
     for machine in all_machines:
         machines_by_user.setdefault(machine["user_id"], []).append(machine["specification_id"])
-        
+
     group_total_usage = {}
-    for group_id, users in users_in_group.items():
+    for group_id, group_users in users_in_group.items():
         group_total_usage[group_id] = {"ram": 0, "cpus": 0, "gpus": 0}
-        for user_id in users:
+        for user_id in group_users:
             for spec_id in machines_by_user.get(user_id, []):
                 spec = all_specifications.get(spec_id)
                 if spec:
