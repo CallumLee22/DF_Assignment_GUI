@@ -138,17 +138,17 @@ def groups():
             gpus += int(spec["gpus"])
             ram_gb += int(spec["ram_gb"])
 
-        fig, ax = plt.subplots()
+        fig, axes = plt.subplots()
 
         components = ['CPUs', 'GPUs', 'RAM']
         counts = [cpus, gpus, ram_gb]
         bar_colors = ['tab:red', 'tab:blue', 'tab:green']
 
-        ax.barh(components, counts, color=bar_colors)
+        axes.barh(components, counts, color=bar_colors)
 
-        ax.set_xlabel('Component')
-        ax.set_ylabel('Number Being Used')
-        ax.set_title('Component Usage')
+        axes.set_xlabel('Component')
+        axes.set_ylabel('Number Being Used')
+        axes.set_title('Component Usage')
 
         plt.savefig(f"static/{group['name']}.png")
 
@@ -172,7 +172,7 @@ def departments():
 
     dep_names = [all_departments[name] for name in all_departments.keys()]
 
-    fig, ax = plt.subplots()
+    fig, axes = plt.subplots()
 
     counts = []
     for dep in dep_total_usage:
@@ -182,17 +182,17 @@ def departments():
         for _ in dep_names:
             counts.append(0)
 
-    ax.barh(dep_names, counts)
+    axes.barh(dep_names, counts)
 
-    ax.invert_yaxis()
+    axes.invert_yaxis()
 
-    ax.set_xlabel('CPUs Being Used')
-    ax.set_ylabel('Department')
-    ax.set_title('CPU Usage')
+    axes.set_xlabel('CPUs Being Used')
+    axes.set_ylabel('Department')
+    axes.set_title('CPU Usage')
 
     plt.savefig("static/departments_cpu.png", bbox_inches='tight')
 
-    fig, ax = plt.subplots()
+    fig, axes = plt.subplots()
 
     counts = []
     for dep in dep_total_usage:
@@ -202,15 +202,15 @@ def departments():
         for _ in dep_names:
             counts.append(0)
 
-    ax.barh(dep_names, counts)
+    axes.barh(dep_names, counts)
 
-    ax.set_xlabel('GPUs Being Used')
-    ax.set_ylabel('Department')
-    ax.set_title('GPU Usage')
+    axes.set_xlabel('GPUs Being Used')
+    axes.set_ylabel('Department')
+    axes.set_title('GPU Usage')
 
     plt.savefig("static/departments_gpu.png", bbox_inches='tight')
 
-    fig, ax = plt.subplots()
+    fig, axes = plt.subplots()
 
     counts = []
     for dep in dep_total_usage:
@@ -220,11 +220,11 @@ def departments():
         for _ in dep_names:
             counts.append(0)
 
-    ax.barh(dep_names, counts)
+    axes.barh(dep_names, counts)
 
-    ax.set_xlabel('RAM (Gb) Being Used')
-    ax.set_ylabel('Department')
-    ax.set_title('RAM Usage')
+    axes.set_xlabel('RAM (Gb) Being Used')
+    axes.set_ylabel('Department')
+    axes.set_title('RAM Usage')
 
     plt.savefig("static/departments_ram.png", bbox_inches='tight')
 
