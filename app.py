@@ -111,11 +111,11 @@ def groups():
     group_info = []
 
     for group in all_groups:
-        users = []
+        groups_user = []
         for user in all_users:
             if user["group_id"] == group["group_id"]:
-                users.append(user["user_id"])
-        group_info.append({"name": group["name"],"users": users, "machines": []})
+                groups_user.append(user["user_id"])
+        group_info.append({"name": group["name"],"users": groups_user, "machines": []})
 
     for group in group_info:
         for machine in all_machines:
@@ -214,7 +214,10 @@ def departments():
             dep_total_usage[dep_id]["cpus"] += group_usage["cpus"]
             dep_total_usage[dep_id]["gpus"] += group_usage["gpus"]
 
-    dep_total_usage = [{"department_id": dep_id, **usage} for dep_id, usage in dep_total_usage.items()]
+    dep_total_usage = [
+        {"department_id": dep_id, **usage}
+        for dep_id, usage in dep_total_usage.items()
+    ]
 
     fig, ax = plt.subplots()
 
@@ -223,7 +226,7 @@ def departments():
         counts.append(dep["cpus"])
 
     if len(counts) == 0:
-        for name in dep_names:
+        for _ in dep_names:
             counts.append(0)
 
     ax.barh(dep_names, counts)
@@ -243,7 +246,7 @@ def departments():
         counts.append(dep["gpus"])
 
     if len(counts) == 0:
-        for name in dep_names:
+        for _ in dep_names:
             counts.append(0)
 
     ax.barh(dep_names, counts)
@@ -261,7 +264,7 @@ def departments():
         counts.append(dep["ram"])
 
     if len(counts) == 0:
-        for name in dep_names:
+        for _ in dep_names:
             counts.append(0)
 
     ax.barh(dep_names, counts)
