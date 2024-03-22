@@ -20,6 +20,7 @@ app = Flask(__name__)
 app.app_context().push()
 app.config["SECRET_KEY"] = "secret_key"
 
+
 @app.route("/")
 def index():
     """
@@ -47,18 +48,17 @@ def users():
         all_machines = (
             supabase.table("Machines")
             .select("user_id", "specification_id", "state")
-            .eq("user_id", name["user_id"]).neq("state", "DELETED")
-            .execute().data
+            .eq("user_id", name["user_id"])
+            .neq("state", "DELETED")
+            .execute()
+            .data
         )
 
         user_info.append(
             {
                 "user_id": name["user_id"],
                 "full_name": name["first_name"] + " " + name["last_name"],
-                "machines": [
-                    machine["specification_id"]
-                    for machine in all_machines
-                    ]
+                "machines": [machine["specification_id"] for machine in all_machines],
             }
         )
 
@@ -71,7 +71,8 @@ def users():
                 supabase.table("Specifications")
                 .select("cpus", "gpus", "ram_gb")
                 .eq("specification_id", machine)
-                .execute().data[0]
+                .execute()
+                .data[0]
             )
 
             cpus += int(spec["cpus"])
@@ -80,17 +81,17 @@ def users():
 
         fig, axes = plt.subplots()
 
-        components = ['CPUs', 'GPUs', 'RAM']
+        components = ["CPUs", "GPUs", "RAM"]
         counts = [cpus, gpus, ram_gb]
-        bar_colors = ['tab:red', 'tab:blue', 'tab:green']
+        bar_colors = ["tab:red", "tab:blue", "tab:green"]
 
         axes.barh(components, counts, color=bar_colors)
 
-        axes.set_xlabel('Component')
-        axes.set_ylabel('Number Being Used')
-        axes.set_title('Component Usage')
+        axes.set_xlabel("Component")
+        axes.set_ylabel("Number Being Used")
+        axes.set_title("Component Usage")
 
-        plt.savefig(f"static/{user['full_name']}.png")
+        fig.savefig(f"static/{user['full_name']}.png")
 
     return render_template("users.jinja", user_info=user_info)
 
@@ -102,8 +103,11 @@ def groups():
     Gets all usage regarding groups
     """
     all_machines = (
-        supabase.table("Machines").select("user_id", "specification_id")
-        .neq("state", "DELETED").execute().data
+        supabase.table("Machines")
+        .select("user_id", "specification_id")
+        .neq("state", "DELETED")
+        .execute()
+        .data
     )
     all_users = supabase.table("Users").select("user_id", "group_id").execute().data
     all_groups = supabase.table("Groups").select("group_id", "name").execute().data
@@ -119,7 +123,8 @@ def groups():
                 supabase.table("Specifications")
                 .select("cpus", "gpus", "ram_gb")
                 .eq("specification_id", machine)
-                .execute().data[0]
+                .execute()
+                .data[0]
             )
 
             cpus += int(spec["cpus"])
@@ -128,17 +133,17 @@ def groups():
 
         fig, axes = plt.subplots()
 
-        components = ['CPUs', 'GPUs', 'RAM']
+        components = ["CPUs", "GPUs", "RAM"]
         counts = [cpus, gpus, ram_gb]
-        bar_colors = ['tab:red', 'tab:blue', 'tab:green']
+        bar_colors = ["tab:red", "tab:blue", "tab:green"]
 
         axes.barh(components, counts, color=bar_colors)
 
-        axes.set_xlabel('Component')
-        axes.set_ylabel('Number Being Used')
-        axes.set_title('Component Usage')
+        axes.set_xlabel("Component")
+        axes.set_ylabel("Number Being Used")
+        axes.set_title("Component Usage")
 
-        plt.savefig(f"static/{group['name']}.png")
+        fig.savefig(f"static/{group['name']}.png")
 
     return render_template("groups.jinja", groups=all_groups)
 
@@ -149,12 +154,13 @@ def departments():
     """
     Gets all usage regarding departments
     """
-    all_departments = (
-        {dep["department_id"]: dep["name"]
-         for dep in supabase.table("Departments")
-         .select("department_id", "name")
-         .execute().data}
-    )
+    all_departments = {
+        dep["department_id"]: dep["name"]
+        for dep in supabase.table("Departments")
+        .select("department_id", "name")
+        .execute()
+        .data
+    }
 
     dep_total_usage = get_department_info()
 
@@ -174,11 +180,11 @@ def departments():
 
     axes.invert_yaxis()
 
-    axes.set_xlabel('CPUs Being Used')
-    axes.set_ylabel('Department')
-    axes.set_title('CPU Usage')
+    axes.set_xlabel("CPUs Being Used")
+    axes.set_ylabel("Department")
+    axes.set_title("CPU Usage")
 
-    plt.savefig("static/departments_cpu.png", bbox_inches='tight')
+    fig.savefig("static/departments_cpu.png", bbox_inches="tight")
 
     fig, axes = plt.subplots()
 
@@ -192,11 +198,11 @@ def departments():
 
     axes.barh(dep_names, counts)
 
-    axes.set_xlabel('GPUs Being Used')
-    axes.set_ylabel('Department')
-    axes.set_title('GPU Usage')
+    axes.set_xlabel("GPUs Being Used")
+    axes.set_ylabel("Department")
+    axes.set_title("GPU Usage")
 
-    plt.savefig("static/departments_gpu.png", bbox_inches='tight')
+    fig.savefig("static/departments_gpu.png", bbox_inches="tight")
 
     fig, axes = plt.subplots()
 
@@ -210,13 +216,14 @@ def departments():
 
     axes.barh(dep_names, counts)
 
-    axes.set_xlabel('RAM (Gb) Being Used')
-    axes.set_ylabel('Department')
-    axes.set_title('RAM Usage')
+    axes.set_xlabel("RAM (Gb) Being Used")
+    axes.set_ylabel("Department")
+    axes.set_title("RAM Usage")
 
-    plt.savefig("static/departments_ram.png", bbox_inches='tight')
+    fig.savefig("static/departments_ram.png", bbox_inches="tight")
 
     return render_template("departments.jinja", departments=all_departments)
+
 
 def get_department_info():
     """
@@ -224,21 +231,24 @@ def get_department_info():
     """
 
     all_machines = (
-        supabase.table("Machines").select("user_id", "specification_id")
-        .neq("state", "DELETED").execute().data
+        supabase.table("Machines")
+        .select("user_id", "specification_id")
+        .neq("state", "DELETED")
+        .execute()
+        .data
     )
     all_users = supabase.table("Users").select("user_id", "group_id").execute().data
-    all_groups = (
-        {group["group_id"]: group["department_id"]
-         for group in supabase.table("Groups")
-         .select("group_id", "department_id")
-         .execute().data}
-    )
-    all_specifications = (
-        {spec["specification_id"]: spec
-        for spec in supabase.table("Specifications")
-        .select("*").execute().data}
-    )
+    all_groups = {
+        group["group_id"]: group["department_id"]
+        for group in supabase.table("Groups")
+        .select("group_id", "department_id")
+        .execute()
+        .data
+    }
+    all_specifications = {
+        spec["specification_id"]: spec
+        for spec in supabase.table("Specifications").select("*").execute().data
+    }
 
     users_in_group = {}
     for user in all_users:
@@ -246,18 +256,22 @@ def get_department_info():
 
     machines_by_user = {}
     for machine in all_machines:
-        machines_by_user.setdefault(machine["user_id"], []).append(machine["specification_id"])
+        machines_by_user.setdefault(machine["user_id"], []).append(
+            machine["specification_id"]
+        )
 
     dep_total_usage = get_dep_total_usage(
         users_in_group, machines_by_user, all_specifications, all_groups
     )
 
     return [
-        {"department_id": dep_id, **usage}
-        for dep_id, usage in dep_total_usage.items()
+        {"department_id": dep_id, **usage} for dep_id, usage in dep_total_usage.items()
     ]
 
-def get_dep_total_usage(users_in_group, machines_by_user, all_specifications, all_groups):
+
+def get_dep_total_usage(
+    users_in_group, machines_by_user, all_specifications, all_groups
+):
     """
     Get departments' usage
     """
@@ -284,6 +298,7 @@ def get_dep_total_usage(users_in_group, machines_by_user, all_specifications, al
 
     return dep_total_usage
 
+
 def get_group_info(all_groups, all_users, all_machines):
     """
     Get all group info
@@ -295,7 +310,7 @@ def get_group_info(all_groups, all_users, all_machines):
         for user in all_users:
             if user["group_id"] == group["group_id"]:
                 groups_user.append(user["user_id"])
-        group_info.append({"name": group["name"],"users": groups_user, "machines": []})
+        group_info.append({"name": group["name"], "users": groups_user, "machines": []})
 
     for group in group_info:
         for machine in all_machines:
@@ -303,6 +318,7 @@ def get_group_info(all_groups, all_users, all_machines):
                 group["machines"].append(machine["specification_id"])
 
     return group_info
+
 
 if __name__ == "__main__":
     app.run()
