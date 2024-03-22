@@ -3,5 +3,5 @@ Flask==3.0.2
 setuptools
 python-dotenv
 matplotlib==3.7.5
-numpy==1.26.4
+numpy==1.24.4
 cachetools==5.3.3
