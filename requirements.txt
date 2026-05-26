@@ -1,5 +1,5 @@
 supabase
-Flask==3.0.2
+Flask==3.1.3
 setuptools
 python-dotenv
 matplotlib==3.7.5
